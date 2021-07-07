@@ -19,7 +19,7 @@ extern crate clap;
 
 #[tokio::main]
 async fn main() {
-  env::set_var("RUST_LOG", "debug"); // TODO:
+  env::set_var("RUST_LOG", "info");
   env_logger::init();
 
   let mut globals = Globals::new(ALGORITHM, SIGNING_KEY, VALIDATION_KEY, DURATION);
