@@ -9,33 +9,41 @@ pub enum AlgorithmType {
   RSA,
 }
 
+pub enum Mode {
+  GENERATE,
+  VERIFY,
+  NONE,
+}
+
 #[derive(Debug)]
 pub struct Globals {
-  pub algorithm: Algorithm,
+  pub algorithm: Option<Algorithm>,
   signing_key: String,
-  validation_key: Option<String>,
   pub duration: usize,
   pub add_exp: bool,
   pub add_iat: bool,
   pub claim: serde_json::Value,
+  validation_key: Option<String>,
+  pub token: Option<String>,
 }
 
 impl Globals {
   pub fn new() -> Globals {
     Globals {
-      algorithm: ALGORITHM,
+      algorithm: None,
       signing_key: SIGNING_KEY.to_string(),
-      validation_key: None,
       duration: 0,
       add_exp: false,
       add_iat: false,
       claim: serde_json::from_str(r#"{}"#).unwrap(),
+      validation_key: None,
+      token: None,
     }
   }
 
   pub fn set_algorithm(&mut self, algorithm_str: &str) {
     if let Ok(a) = Algorithm::from_str(algorithm_str) {
-      self.algorithm = a;
+      self.algorithm = Some(a);
     } else {
       panic!("Invalid algorithm")
     }
@@ -72,21 +80,31 @@ impl Globals {
   }
 
   pub fn is_hmac(&self) -> bool {
-    self.algorithm == Algorithm::HS512
-      || self.algorithm == Algorithm::HS384
-      || self.algorithm == Algorithm::HS256
+    if let Some(alg) = self.algorithm {
+      alg == Algorithm::HS512 || alg == Algorithm::HS384 || alg == Algorithm::HS256
+    } else {
+      false
+    }
   }
 
   pub fn is_ec(&self) -> bool {
-    self.algorithm == Algorithm::ES256 || self.algorithm == Algorithm::ES384
+    if let Some(alg) = self.algorithm {
+      alg == Algorithm::ES256 || alg == Algorithm::ES384
+    } else {
+      false
+    }
   }
 
   pub fn is_rsa(&self) -> bool {
-    self.algorithm == Algorithm::RS256
-      || self.algorithm == Algorithm::RS384
-      || self.algorithm == Algorithm::RS512
-      || self.algorithm == Algorithm::PS256
-      || self.algorithm == Algorithm::PS384
-      || self.algorithm == Algorithm::PS512
+    if let Some(alg) = self.algorithm {
+      alg == Algorithm::RS256
+        || alg == Algorithm::RS384
+        || alg == Algorithm::RS512
+        || alg == Algorithm::PS256
+        || alg == Algorithm::PS384
+        || alg == Algorithm::PS512
+    } else {
+      false
+    }
   }
 }

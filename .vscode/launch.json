@@ -23,12 +23,13 @@
         "RUST_LOG": "debug"
       },
       "args": [
+        "generate",
         "--claim-path=../sample_claim.json",
         "--add-iat",
         "--expires-in=3",
         "--algorithm=ES256",
         "--signing-key-path=../secret_key_es256.example",
-        "--validation-key-path=../public_key_es256.example",
+        // "--validation-key-path=../public_key_es256.example",
         // "test_subject"
       ],
       "cwd": "${workspaceFolder}/.private"

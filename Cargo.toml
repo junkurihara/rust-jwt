@@ -1,6 +1,6 @@
 [package]
 name = "rjwt"
-description = "JWT commandline generator"
+description = "JWT commandline tool"
 version = "0.1.0"
 authors = ["Jun Kurihara"]
 edition = "2018"

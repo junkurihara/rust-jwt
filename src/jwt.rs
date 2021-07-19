@@ -1,7 +1,6 @@
 use crate::globals::{AlgorithmType, Globals};
 use chrono::Local;
 use jsonwebtoken::{decode, decode_header, encode, DecodingKey, EncodingKey, Header, Validation};
-use log::debug;
 use serde_json;
 
 pub fn generate(globals: &Globals) -> Result<String, Box<dyn std::error::Error>> {
@@ -9,7 +8,7 @@ pub fn generate(globals: &Globals) -> Result<String, Box<dyn std::error::Error>>
   let expired_at: usize = issued_at + globals.duration;
 
   // header
-  let header = Header::new(globals.algorithm);
+  let header = Header::new(globals.algorithm.unwrap());
   println!(
     "[Header to be signed]\n{}",
     serde_json::to_string_pretty(&header)?
@@ -42,10 +41,12 @@ pub fn generate(globals: &Globals) -> Result<String, Box<dyn std::error::Error>>
   Ok(jwt)
 }
 
-pub fn verify(globals: &Globals, token: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub fn verify(globals: &mut Globals) -> Result<(), Box<dyn std::error::Error>> {
+  let token = globals.token.as_ref().unwrap();
   // header
   let parsed_header = decode_header(&token)?;
   let alg = parsed_header.alg;
+  globals.algorithm = Some(alg);
 
   // key
   let key_str = match globals.get_type() {
@@ -62,6 +63,14 @@ pub fn verify(globals: &Globals, token: &str) -> Result<(), Box<dyn std::error::
   };
 
   let verified = decode::<serde_json::Value>(&token, &decoding_key, &Validation::new(alg))?;
-  debug!("{:?}", verified);
+  println!(
+    "[Validated header]\n{}",
+    serde_json::to_string_pretty(&verified.header)?
+  );
+  println!(
+    "[Validated claims]\n{}",
+    serde_json::to_string_pretty(&verified.claims)?
+  );
+
   Ok(())
 }
