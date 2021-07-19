@@ -93,7 +93,9 @@ $ rjwt generate "{\"sub\": \"sample-subject\"}" \
 [Generated JWT]
 eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJleHAiOjE2Mjc1OTg4NDMsImlhdCI6MTYyNjczNDg0Mywic3ViIjoic2FtcGxlLXN1YmplY3QifQ.LfheunfaXI-dcq-MOtkJGEBaUH-_R0Iw55Qrf9ucf1ng2u0cB5BRMrakbvgEajbk5_dx1llb-i8i5oa5AhdOcA
 
-$ rjwt verify -W ./public_key_es256.example eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJleHAiOjE2Mjc1OTg4NDMsImlhdCI6MTYyNjczNDg0Mywic3ViIjoic2FtcGxlLXN1YmplY3QifQ.LfheunfaXI-dcq-MOtkJGEBaUH-_R0Iw55Qrf9ucf1ng2u0cB5BRMrakbvgEajbk5_dx1llb-i8i5oa5AhdOcA
+$ rjwt verify \
+ -W ./public_key_es256.example \
+  eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJleHAiOjE2Mjc1OTg4NDMsImlhdCI6MTYyNjczNDg0Mywic3ViIjoic2FtcGxlLXN1YmplY3QifQ.LfheunfaXI-dcq-MOtkJGEBaUH-_R0Iw55Qrf9ucf1ng2u0cB5BRMrakbvgEajbk5_dx1llb-i8i5oa5AhdOcA
 
 [Validated header]
 {
