@@ -11,34 +11,72 @@ $ cargo build
 ## Usage
 
 ```:bash
+$ rjwt -h
+rjwt 0.1.0
+Jun Kurihara
+JWT commandline tool
+
 USAGE:
-    rjwt [FLAGS] [OPTIONS] <claim|--claim-path <claim_path>>
+    rjwt [SUBCOMMAND]
 
 FLAGS:
-    -I, --add-iat    Append 'issued_at (iat)' of current unix time in JWT claim
     -h, --help       Prints help information
-        --version    Prints version information
+    -V, --version    Prints version information
 
-OPTIONS:
-    -A, --algorithm <algorithm>                        Signing algorithm: HS256|ES256 (default = "HS256")
-    -F, --claim-path <claim_path>                      Claim JSON path like "--claim-path=./sample_claim.json"
-    -E, --expires-in <expires_in>                      Years in which the jwt expires
-    -S, --signing-key <signing_key>                    Signing key string like "secret"
-    -P, --signing-key-path <signing_key_path>          Signing key file path like "./secret_key.pm"
-    -V, --validation-key-path <validation_key_path>    Validation key file path like "./public_key.pm"
-
-ARGS:
-    <claim>    Claim JSON string
+SUBCOMMANDS:
+    generate    Generate a JWT
+    help        Prints this message or the help of the given subcommand(s)
+    verify      Verify a JWT
 ```
 
-Example: Generate a jwt by ES256 with 10 years validity.
+- Generate a JWT:
+
+  ```: bash
+  USAGE:
+      rjwt generate [FLAGS] [OPTIONS] <claim|--claim-path <claim_path>> <--signing-key <signing_key>|--signing-key-path <signing_key_path>>
+
+  FLAGS:
+      -I, --add-iat    Append 'issued_at (iat)' of current unix time in JWT claim
+      -h, --help       Prints help information
+      -V, --version    Prints version information
+
+  OPTIONS:
+      -A, --algorithm <algorithm>                  Signing algorithm: HS256|ES256 (default = "HS256")
+      -F, --claim-path <claim_path>                Claim JSON path like "--claim-path=./sample_claim.json"
+      -E, --expires-in <expires_in>                Days in which the jwt expires
+      -s, --signing-key <signing_key>              Signing key string like "secret"
+      -P, --signing-key-path <signing_key_path>    Signing key file path like "./secret_key.pem"
+
+  ARGS:
+      <claim>    Claim JSON string
+  ```
+
+- Verify a JWT
+
+  ```:bash
+  USAGE:
+      rjwt verify [OPTIONS] <--validation-key <validation_key>|--validation-key-path <validation_key_path>> <token|--token-path <token_path>>
+
+  FLAGS:
+      -h, --help       Prints help information
+      -V, --version    Prints version information
+
+  OPTIONS:
+      -T, --token-path <token_path>                      JWT path like "--token-path=./token_es256.example"
+      -v, --validation-key <validation_key>              Validation key string like "secret"
+      -W, --validation-key-path <validation_key_path>    Validation key file path like "./public_key.pem"
+
+  ARGS:
+      <token>    JWT string
+  ```
+
+Example: Generate a jwt by ES256 with 10 days validity, and validate it.
 
 ```:bash
-$ ./target/debug/rjwt "{\"sub\": \"sample-subject\"}" \
+$ rjwt generate "{\"sub\": \"sample-subject\"}" \
  -A ES256 \
  -P ./secret_key_es256.example \
- -V ./public_key_es256.example \
- -E 1 \
+ -E 10 \
  -I
 
 [Header to be signed]
@@ -48,12 +86,28 @@ $ ./target/debug/rjwt "{\"sub\": \"sample-subject\"}" \
 }
 [Claim to be signed]
 {
-  "exp": 1626814529,
-  "iat": 1626728129,
+  "exp": 1627598843,
+  "iat": 1626734843,
   "sub": "sample-subject"
 }
 [Generated JWT]
-eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJleHAiOjE2MjY4MTQ1MjksImlhdCI6MTYyNjcyODEyOSwic3ViIjoic2FtcGxlLXN1YmplY3QifQ.Ac29-dDISATdCOGxmdmTLpHbiV0o7t8bv40Cnm2i4o_E3D6koe2BtFH4OPowDw0ZhIQCxyQVf29FfCQghJdCkw
+eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJleHAiOjE2Mjc1OTg4NDMsImlhdCI6MTYyNjczNDg0Mywic3ViIjoic2FtcGxlLXN1YmplY3QifQ.LfheunfaXI-dcq-MOtkJGEBaUH-_R0Iw55Qrf9ucf1ng2u0cB5BRMrakbvgEajbk5_dx1llb-i8i5oa5AhdOcA
+
+$ rjwt verify -W ./public_key_es256.example eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJleHAiOjE2Mjc1OTg4NDMsImlhdCI6MTYyNjczNDg0Mywic3ViIjoic2FtcGxlLXN1YmplY3QifQ.LfheunfaXI-dcq-MOtkJGEBaUH-_R0Iw55Qrf9ucf1ng2u0cB5BRMrakbvgEajbk5_dx1llb-i8i5oa5AhdOcA
+
+[Validated header]
+{
+  "typ": "JWT",
+  "alg": "ES256"
+}
+[Validated claims]
+{
+  "exp": 1627598843,
+  "iat": 1626734843,
+  "sub": "sample-subject"
+}
+[Validation] Success
 ```
 
-When the public key associated with the given private key is specified, it also validates the generated token internally. Put `RUST_LOG=debug` as an environment variable to see the debug message.
+Put `RUST_LOG=debug` as an environment variable to see the debug message.
+You can use an arbitrarily JSON-formatted claims by passing it with `--claim-path`.
