@@ -1,4 +1,6 @@
+use crate::constants::*;
 use jsonwebtoken::Algorithm;
+use serde_json;
 use std::str::FromStr;
 
 pub enum AlgorithmType {
@@ -11,22 +13,23 @@ pub enum AlgorithmType {
 pub struct Globals {
   pub algorithm: Algorithm,
   signing_key: String,
-  validation_key: String,
+  validation_key: Option<String>,
   pub duration: usize,
+  pub add_exp: bool,
+  pub add_iat: bool,
+  pub claim: serde_json::Value,
 }
 
 impl Globals {
-  pub fn new(
-    algorithm: Algorithm,
-    signing_key: &str,
-    validation_key: &str,
-    duration: usize,
-  ) -> Globals {
+  pub fn new() -> Globals {
     Globals {
-      algorithm: algorithm,
-      signing_key: signing_key.to_string(),
-      validation_key: validation_key.to_string(),
-      duration: duration,
+      algorithm: ALGORITHM,
+      signing_key: SIGNING_KEY.to_string(),
+      validation_key: None,
+      duration: 0,
+      add_exp: false,
+      add_iat: false,
+      claim: serde_json::from_str(r#"{}"#).unwrap(),
     }
   }
 
@@ -42,20 +45,20 @@ impl Globals {
     self.signing_key = secret_str.to_string();
   }
 
-  pub fn get_signing_key(&self) -> &str {
+  pub fn get_signing_key(&self) -> &String {
     &self.signing_key
   }
 
   pub fn set_validation_key(&mut self, vk_str: &str) {
-    self.validation_key = vk_str.to_string();
+    self.validation_key = Some(vk_str.to_string());
   }
 
-  pub fn get_validation_key(&self) -> &str {
-    &self.validation_key
+  pub fn get_validation_key(&self) -> Option<&String> {
+    self.validation_key.as_ref()
   }
 
-  pub fn set_expires_in(&mut self, years: usize) {
-    self.duration = years * 365 * 24 * 60 * 60;
+  pub fn set_expires_in(&mut self, days: usize) {
+    self.duration = days * 24 * 60 * 60;
   }
 
   pub fn get_type(&self) -> AlgorithmType {

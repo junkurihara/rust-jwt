@@ -1,55 +1,67 @@
 use crate::globals::{AlgorithmType, Globals};
-use crate::jwt_claims::Claims;
-use crate::subject::Subject;
 use chrono::Local;
 use jsonwebtoken::{decode, decode_header, encode, DecodingKey, EncodingKey, Header, Validation};
-use log::{debug, error, info, warn};
+use log::debug;
+use serde_json;
 
-pub fn generate(
-  globals: &Globals,
-  subject: &Subject,
-) -> Result<String, jsonwebtoken::errors::Error> {
+pub fn generate(globals: &Globals) -> Result<String, Box<dyn std::error::Error>> {
   let issued_at: usize = Local::now().timestamp() as usize;
-  let my_claims = Claims {
-    sub: subject.sub.clone(), // コマンド引数で与える
-    iat: issued_at,
-    exp: issued_at + globals.duration,
-  };
+  let expired_at: usize = issued_at + globals.duration;
 
   // header
   let header = Header::new(globals.algorithm);
+  println!(
+    "[Header to be signed]\n{}",
+    serde_json::to_string_pretty(&header)?
+  );
+
+  // key
+  let key_str = match globals.get_type() {
+    AlgorithmType::HMAC => globals.get_signing_key(),
+    AlgorithmType::EC | AlgorithmType::RSA => globals.get_signing_key(),
+  };
   let encoding_key = match globals.get_type() {
     AlgorithmType::HMAC => EncodingKey::from_secret(globals.get_signing_key().as_ref()),
-    AlgorithmType::EC => {
-      let ec_key_bytes = globals.get_signing_key().as_bytes();
-      EncodingKey::from_ec_pem(ec_key_bytes)?
-    }
-    AlgorithmType::RSA => {
-      let rsa_key_bytes = globals.get_signing_key().as_bytes();
-      EncodingKey::from_rsa_pem(rsa_key_bytes)?
-    }
+    AlgorithmType::EC => EncodingKey::from_ec_pem(key_str.as_bytes())?,
+    AlgorithmType::RSA => EncodingKey::from_rsa_pem(key_str.as_bytes())?,
   };
-  encode(&header, &my_claims, &encoding_key)
+
+  // claim
+  let mut claim_value: serde_json::Value = globals.claim.clone();
+  if globals.add_iat {
+    claim_value["iat"] = serde_json::Value::from(issued_at); // add ist here when option is enabled
+  }
+  if globals.add_exp {
+    claim_value["exp"] = serde_json::Value::from(expired_at); // add exp here when option is enabled
+  }
+  println!(
+    "[Claim to be signed]\n{}",
+    serde_json::to_string_pretty(&claim_value)?
+  );
+  let jwt = encode(&header, &claim_value, &encoding_key)?;
+  Ok(jwt)
 }
 
-pub fn verify(
-  globals: &Globals,
-  token: &str,
-) -> Result<jsonwebtoken::TokenData<Claims>, jsonwebtoken::errors::Error> {
+pub fn verify(globals: &Globals, token: &str) -> Result<(), Box<dyn std::error::Error>> {
+  // header
   let parsed_header = decode_header(&token)?;
   let alg = parsed_header.alg;
+
+  // key
+  let key_str = match globals.get_type() {
+    AlgorithmType::HMAC => globals.get_signing_key(),
+    AlgorithmType::EC | AlgorithmType::RSA => match globals.get_validation_key() {
+      Some(s) => s,
+      None => return Err("No validation key is specified")?,
+    },
+  };
   let decoding_key = match globals.get_type() {
     AlgorithmType::HMAC => DecodingKey::from_secret(globals.get_signing_key().as_ref()),
-    AlgorithmType::EC => {
-      let ec_key_bytes = globals.get_validation_key().as_bytes();
-      DecodingKey::from_ec_pem(ec_key_bytes).unwrap()
-    }
-    AlgorithmType::RSA => {
-      let rsa_key_bytes = globals.get_validation_key().as_bytes();
-      DecodingKey::from_rsa_pem(rsa_key_bytes).unwrap()
-    }
+    AlgorithmType::EC => DecodingKey::from_ec_pem(key_str.as_bytes())?,
+    AlgorithmType::RSA => DecodingKey::from_rsa_pem(key_str.as_bytes())?,
   };
-  let verified = decode::<Claims>(&token, &decoding_key, &Validation::new(alg));
+
+  let verified = decode::<serde_json::Value>(&token, &decoding_key, &Validation::new(alg))?;
   debug!("{:?}", verified);
-  return verified;
+  Ok(())
 }
