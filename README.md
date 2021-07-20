@@ -41,7 +41,7 @@ SUBCOMMANDS:
       -V, --version    Prints version information
 
   OPTIONS:
-      -A, --algorithm <algorithm>                  Signing algorithm: HS256|ES256 (default = "HS256")
+      -A, --algorithm <algorithm>                  Signing algorithm: like "HS256" or "ES256" [default: HS256]
       -F, --claim-path <claim_path>                Claim JSON path like "--claim-path=./sample_claim.json"
       -E, --expires-in <expires_in>                Days in which the jwt expires
       -s, --signing-key <signing_key>              Signing key string like "secret"

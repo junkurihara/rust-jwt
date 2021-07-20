@@ -1,3 +1,4 @@
+use crate::constants::*;
 use crate::globals::{Globals, Mode};
 use clap::{App, Arg, ArgGroup};
 use std::fs;
@@ -25,7 +26,8 @@ pub fn parse_opt(globals: &mut Globals) -> Result<Mode, Box<dyn std::error::Erro
             .short("A")
             .long("algorithm")
             .takes_value(true)
-            .help("Signing algorithm: HS256|ES256 (default = \"HS256\")"),
+            .default_value(DEFAULT_ALGORITHM_STR)
+            .help("Signing algorithm: like \"HS256\" or \"ES256\""),
         )
         .arg(
           Arg::with_name("signing_key")
@@ -163,7 +165,7 @@ pub fn parse_opt(globals: &mut Globals) -> Result<Mode, Box<dyn std::error::Erro
               globals.token = Some(truncate_vec[0].to_string());
             }
             Err(_) => {
-              return Err("Invalid claim path")?;
+              return Err("Invalid token path")?;
             }
           }
         }

@@ -1,4 +1,3 @@
-use crate::constants::*;
 use jsonwebtoken::Algorithm;
 use serde_json;
 use std::str::FromStr;
@@ -18,7 +17,7 @@ pub enum Mode {
 #[derive(Debug)]
 pub struct Globals {
   pub algorithm: Option<Algorithm>,
-  signing_key: String,
+  signing_key: Option<String>,
   pub duration: usize,
   pub add_exp: bool,
   pub add_iat: bool,
@@ -31,7 +30,7 @@ impl Globals {
   pub fn new() -> Globals {
     Globals {
       algorithm: None,
-      signing_key: SIGNING_KEY.to_string(),
+      signing_key: None,
       duration: 0,
       add_exp: false,
       add_iat: false,
@@ -49,12 +48,12 @@ impl Globals {
     }
   }
 
-  pub fn set_signing_key(&mut self, secret_str: &str) {
-    self.signing_key = secret_str.to_string();
+  pub fn set_signing_key(&mut self, sk_str: &str) {
+    self.signing_key = Some(sk_str.to_string());
   }
 
-  pub fn get_signing_key(&self) -> &String {
-    &self.signing_key
+  pub fn get_signing_key(&self) -> Option<&String> {
+    self.signing_key.as_ref()
   }
 
   pub fn set_validation_key(&mut self, vk_str: &str) {

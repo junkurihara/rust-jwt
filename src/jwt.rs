@@ -16,11 +16,14 @@ pub fn generate(globals: &Globals) -> Result<String, Box<dyn std::error::Error>>
 
   // key
   let key_str = match globals.get_type() {
-    AlgorithmType::HMAC => globals.get_signing_key(),
-    AlgorithmType::EC | AlgorithmType::RSA => globals.get_signing_key(),
+    AlgorithmType::HMAC => globals.get_signing_key().unwrap(),
+    AlgorithmType::EC | AlgorithmType::RSA => match globals.get_signing_key() {
+      Some(s) => s,
+      None => return Err("No validation key is specified")?,
+    },
   };
   let encoding_key = match globals.get_type() {
-    AlgorithmType::HMAC => EncodingKey::from_secret(globals.get_signing_key().as_ref()),
+    AlgorithmType::HMAC => EncodingKey::from_secret(key_str.as_ref()),
     AlgorithmType::EC => EncodingKey::from_ec_pem(key_str.as_bytes())?,
     AlgorithmType::RSA => EncodingKey::from_rsa_pem(key_str.as_bytes())?,
   };
@@ -50,14 +53,14 @@ pub fn verify(globals: &mut Globals) -> Result<(), Box<dyn std::error::Error>> {
 
   // key
   let key_str = match globals.get_type() {
-    AlgorithmType::HMAC => globals.get_signing_key(),
+    AlgorithmType::HMAC => globals.get_signing_key().unwrap(),
     AlgorithmType::EC | AlgorithmType::RSA => match globals.get_validation_key() {
       Some(s) => s,
       None => return Err("No validation key is specified")?,
     },
   };
   let decoding_key = match globals.get_type() {
-    AlgorithmType::HMAC => DecodingKey::from_secret(globals.get_signing_key().as_ref()),
+    AlgorithmType::HMAC => DecodingKey::from_secret(key_str.as_ref()),
     AlgorithmType::EC => DecodingKey::from_ec_pem(key_str.as_bytes())?,
     AlgorithmType::RSA => DecodingKey::from_rsa_pem(key_str.as_bytes())?,
   };
