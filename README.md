@@ -1,6 +1,6 @@
-# rust-jwt
-JWT commandline tool
+# rust-jwt-cli
 
+JWT CLI tool
 
 ## Build
 
@@ -14,7 +14,7 @@ $ cargo build
 $ rjwt -h
 rjwt 0.1.0
 Jun Kurihara
-JWT commandline tool
+JWT CLI tool
 
 USAGE:
     rjwt [SUBCOMMAND]
